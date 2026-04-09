@@ -42,9 +42,9 @@ Recognize any of these phrases (or similar variations):
 
 **Ask-mode limitation**: In Ask mode, Copilot cannot invoke subagents. Ask-mode turns are therefore never logged automatically at the time they happen. When switching to Agent/Edit/Plan mode, the journal-logger **must always run full reconciliation** to backfill any missed Ask-mode turns from the conversation history before logging the current turn.
 
-After every user turn in Agent/Edit/Plan mode, run `@journal-logger` to record the interaction in `JOURNAL.md`.
+After every user turn in Agent/Edit/Plan mode, run `@journal-logger` to record the interaction in `.github/agents/journal-logger.agent.md`.
 For Ask-mode sessions without subagent access: logging will be backfilled by the next Agent-mode invocation of `@journal-logger`.
-For the `User` field in `JOURNAL.md`, use a git/github user identifier (prefer `git config user.email`, then `git config user.name`, then explicit GitHub username metadata, then `$USER`).
+For the `User` field in `.github/agents/journal-logger.agent.md`, use a git/github user identifier (prefer `git config user.email`, then `git config user.name`, then explicit GitHub username metadata, then `$USER`).
 
 
 - The detailed logging workflow, reconciliation rules, timestamp validation, and entry template are defined only in:
@@ -112,4 +112,23 @@ When a student presents an error or "broken" code, **do not fix it for them.** F
 * **Testing:** Whenever a function is written, ask: *"What happens if the user inputs a string instead of an integer here?"*
 * **Security:** In Web Dev, always mention basic safety (e.g., "Why should we never trust user input in a SQL query?").
 
+## Conversation Note
+
+- The user asked to write the conversation in this file.
+- User: "I want to make smaller squares flee from bigger ones in pygame. Do not give me the full solution. Just explain what concepts I need to understand to implement this myself."
+- Assistant: Explained key concepts only: per-square state, size comparison, flee direction vectors, speed limiting, handling multiple threats, edge behavior, and collision rules.
+- User: "add it to copilot instructiomn file"
+- Assistant: Added this conversation note section to preserve the request in this file.
+- User: "Why do we normalize a vector when implementing flee behavior? Explain simply, no code."
+- Assistant: Explained that normalization keeps direction while removing distance-based magnitude, so flee speed can be controlled consistently.
+- User: "add it in copilot instructions"
+- User: "Why do we need to clamp speed after applying flee force? Just explain, no code."
+- Assistant: Explained that clamping prevents unlimited acceleration, keeps movement controllable and believable, and avoids jitter or unstable behavior.
+- User: "add it"
+- User: "Why does setting FPS = 0 in pygame make the animation unstable and CPU usage go to 100%? Simple explanation please."
+- Assistant: Explained that uncapped loops run as fast as possible, which maxes CPU and causes unstable frame timing that can make animation jittery or inconsistent.
+- User: "In pygame, why would someone use classes instead of dicts for game objects? What are the tradeoffs? Just explain, no code."
+- Assistant: Explained tradeoffs: dicts are quick for small prototypes, while classes scale better for maintainability, behavior organization, reuse, and fewer key-related errors.
+- User: "add the remaing part in copilot instructions"
+- Assistant: Appended the remaining recent conversation snippets (FPS=0 and classes-vs-dicts exchange) to this Conversation Note section.
 

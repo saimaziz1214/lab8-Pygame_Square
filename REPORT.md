@@ -13,7 +13,7 @@
 ## New Concepts or Tools Encountered
 
 # Report on CoPilot Prompting Experience
-## Student may pull examples from the JOURNAL.md to illustrate their experience, including specific interactions that were particularly helpful or challenging.
+## Student may pull examples from the .github/agents/journal-logger.agent.md log to illustrate their experience, including specific interactions that were particularly helpful or challenging.
 ### Types of prompts that worked well
 ### Types of prompts that did not work well or failed
 

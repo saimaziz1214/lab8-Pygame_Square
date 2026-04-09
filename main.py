@@ -2,76 +2,82 @@ import pygame
 import sys
 import random
 
-# Initialize Pygame
 pygame.init()
 
-# Screen settings
 WIDTH, HEIGHT = 800, 600
+FPS = 60
+
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Moving Squares")
+clock = pygame.time.Clock()
+font = pygame.font.SysFont(None, 30)
 
-# Global settings
-NUM_SQUARES = 100
 MIN_SIZE = 10
 MAX_SIZE = 50
-GLOBAL_MAX_SPEED = 5
-JITTER = 0.3  # How much direction randomly changes per frame
-
-clock = pygame.time.Clock()
+NUM_SQUARES = 20
 
 def make_square():
     size = random.randint(MIN_SIZE, MAX_SIZE)
-    # Bigger = slower: max_speed is inversely proportional to size
-    max_speed = GLOBAL_MAX_SPEED * (1 - (size - MIN_SIZE) / (MAX_SIZE - MIN_SIZE + 1))
-    max_speed = max(0.5, max_speed)  # Ensure minimum movement
-    speed = random.uniform(0.5, max_speed)
+    speed = 200 * (1 - (size - MIN_SIZE) / (MAX_SIZE - MIN_SIZE + 1))
+    speed = max(50, speed)
     return {
-        "x": random.randint(0, WIDTH - size),
-        "y": random.randint(0, HEIGHT - size),
-        "size": size,
+        "x": float(random.randint(0, WIDTH - size)),
+        "y": float(random.randint(0, HEIGHT - size)),
         "dx": random.choice([-1, 1]) * speed,
         "dy": random.choice([-1, 1]) * speed,
-        "max_speed": max_speed,
-        "color": (random.randint(30, 255), random.randint(30, 255), random.randint(30, 255)),
+        "size": size,
+        "color": (random.randint(50, 255), random.randint(50, 255), random.randint(50, 255)),
     }
 
-# Create 100 squares
+def apply_flee(squares):
+    for sq in squares:
+        for other in squares:
+            if sq is other:
+                continue
+            if sq["size"] < other["size"]:
+                fx = sq["x"] - other["x"]
+                fy = sq["y"] - other["y"]
+                dist = (fx**2 + fy**2) ** 0.5
+                if dist < 150 and dist > 0:
+                    fx /= dist
+                    fy /= dist
+                    flee_strength = 300
+                    sq["dx"] += fx * flee_strength * 0.05
+                    sq["dy"] += fy * flee_strength * 0.05
+                    speed = (sq["dx"]**2 + sq["dy"]**2) ** 0.5
+                    max_speed = 300
+                    if speed > max_speed:
+                        sq["dx"] = sq["dx"] / speed * max_speed
+                        sq["dy"] = sq["dy"] / speed * max_speed
+
 squares = [make_square() for _ in range(NUM_SQUARES)]
 
-# Main loop
 while True:
+    delta_time = clock.tick(FPS) / 1000.0
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
 
-    screen.fill((15, 15, 30))  # Dark background
+    screen.fill((15, 15, 30))
+
+    apply_flee(squares)
 
     for sq in squares:
-        # Jitter: randomly nudge direction a little
-        sq["dx"] += random.uniform(-JITTER, JITTER)
-        sq["dy"] += random.uniform(-JITTER, JITTER)
+        sq["x"] += sq["dx"] * delta_time
+        sq["y"] += sq["dy"] * delta_time
 
-        # Clamp speed to this square's max_speed
-        speed = (sq["dx"] ** 2 + sq["dy"] ** 2) ** 0.5
-        if speed > sq["max_speed"]:
-            scale = sq["max_speed"] / speed
-            sq["dx"] *= scale
-            sq["dy"] *= scale
-
-        # Move
-        sq["x"] += sq["dx"]
-        sq["y"] += sq["dy"]
-
-        # Bounce off walls
         if sq["x"] <= 0 or sq["x"] + sq["size"] >= WIDTH:
             sq["dx"] *= -1
-            sq["x"] = max(0, min(WIDTH - sq["size"], sq["x"]))
+            sq["x"] = max(0.0, min(float(WIDTH - sq["size"]), sq["x"]))
         if sq["y"] <= 0 or sq["y"] + sq["size"] >= HEIGHT:
             sq["dy"] *= -1
-            sq["y"] = max(0, min(HEIGHT - sq["size"], sq["y"]))
+            sq["y"] = max(0.0, min(float(HEIGHT - sq["size"]), sq["y"]))
 
         pygame.draw.rect(screen, sq["color"], (sq["x"], sq["y"], sq["size"], sq["size"]))
 
+    fps_text = font.render(f"FPS: {clock.get_fps():.1f}", True, (255, 255, 255))
+    screen.blit(fps_text, (10, 10))
+
     pygame.display.flip()
-    clock.tick(60)
