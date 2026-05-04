@@ -77,3 +77,26 @@ def respawn(sq: dict) -> None:
     sq["dx"]            = random.choice([-1, 1]) * speed
     sq["dy"]            = random.choice([-1, 1]) * speed
     sq["trail"]         = [] 
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    # Exercise 3: screen wrapping
+def wrap_screen(sq: dict) -> None:
+    size = sq["size"]
+    if sq["x"] + size < 0:
+        sq["x"] = float(WIDTH)
+    elif sq["x"] > WIDTH:
+        sq["x"] = float(-size)
+    if sq["y"] + size < 0:
+        sq["y"] = float(HEIGHT)
+    elif sq["y"] > HEIGHT:
+        sq["y"] = float(-size)
