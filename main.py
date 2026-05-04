@@ -43,13 +43,7 @@ def make_square(size: int) -> dict:
         "color":         (random.randint(50, 255),
                           random.randint(50, 255),
                           random.randint(50, 255)),
-        # Q7 – trail
-        "trail":         [],
-        # Q9 – animated growth
-        "target_size":   size,
-        "size_at_start": size,
-        "grow_start_ms": 0,
-        "growing":       False,
+       
     }
 
 
@@ -79,6 +73,12 @@ def respawn(sq: dict) -> None:
     sq["trail"]         = [] 
     
     
+   # Exercise 4: collision detection
+def check_collision(a: dict, b: dict) -> bool:
+    
+    rect_a = pygame.Rect(a["x"], a["y"], a["size"], a["size"])
+    rect_b = pygame.Rect(b["x"], b["y"], b["size"], b["size"])
+    return rect_a.colliderect(rect_b) 
     
     
     
