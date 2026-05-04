@@ -149,7 +149,7 @@ class Boid:
         avg_vel /= count
         # Steer = desired average direction minus current velocity
         steer = avg_vel - pygame.Vector2(self.vx, self.vy)
-     if steer.length() > 0:
+        if steer.length() > 0:
             steer = steer.normalize()
 
      return steer
@@ -160,9 +160,31 @@ class Boid:
     # Then divide by the number of nearby boids to get the average position, 
     # and subtract the current boid's position to get the cohesion steering force.
     def _cohesion(self, boids: List['Boid']) -> pygame.Vector2:
-        steer : pygame.Vector2 = pygame.Vector2(0, 0)
-        return steer
-        
+     steer: pygame.Vector2 = pygame.Vector2(0, 0)
+     center: pygame.Vector2 = pygame.Vector2(0, 0)
+     count: int = 0
+
+     for other in boids:
+        if other is self:
+            continue
+        dx: float = self.x - other.x
+        dy: float = self.y - other.y
+        dist: float = math.hypot(dx, dy)
+        # Only consider boids within COHESION_DISTANCE
+        if dist < config.COHESION_DISTANCE:
+            center += pygame.Vector2(other.x, other.y)
+            count += 1
+
+     if count > 0:
+        # Get center of mass of neighbors
+        center /= count
+        # Steer toward the center of mass
+        steer = center - pygame.Vector2(self.x, self.y)
+        if steer.length() > 0:
+            steer = steer.normalize()
+
+     return steer
+         
 
     # TODO: Use _random_steer, _separation, _alignment and _cohesion in update()
     def update(self, boids: List['Boid'], dt: int) -> None:
