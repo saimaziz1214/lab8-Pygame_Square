@@ -5,7 +5,7 @@ import math
 
 pygame.init()
 
-# ── Screen 
+# ── Screen
 WIDTH, HEIGHT = 800, 600
 FPS = 60
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -13,26 +13,33 @@ pygame.display.set_caption("Moving Squares")
 clock = pygame.time.Clock()
 font = pygame.font.SysFont(None, 30)
 
-#Square size limits 
+# Square size limits
 MIN_SIZE = 10
 MAX_SIZE = 50
 
-# Exercise 1: Mix of squares 
+# Exercise 1: Mix of squares
 SQUARE_CONFIGS = [
-    (5,  25),   # 5  squares of size 25 
-    (10, 10),   # 10 squares of size 10 
-    (30,  4),   # 30 squares of size  4 
+    (5,  25),   # 5  squares of size 25
+    (10, 10),   # 10 squares of size 10
+    (30,  4),   # 30 squares of size  4
 ]
 
-#Exercise 7: Trails 
-TRAILS_LENGTH = 40  
+# Exercise 7: Trails
+TRAILS_LENGTH: int = 40
+
+# Exercise 8: Speed test
+TEST_MODE_ON: bool = False
+
+# Exercise 9: Animated growth
+GROWTH_DURATION_MS: int = 500
+
+# Exercise 6: growth cap
+ABSOLUTE_MAX_SIZE: int = 80
 
 
-
-def make_square(size: int) -> dict: 
-   
-    
-    speed = 200 * (1 - (size - MIN_SIZE) / (MAX_SIZE - MIN_SIZE + 1))
+# make_square 
+def make_square(size: int) -> dict:
+    speed: float = 200 * (1 - (size - MIN_SIZE) / (MAX_SIZE - MIN_SIZE + 1))
     speed = max(50, speed)
 
     return {
@@ -41,28 +48,31 @@ def make_square(size: int) -> dict:
         "dx":            random.choice([-1, 1]) * speed,
         "dy":            random.choice([-1, 1]) * speed,
         "size":          size,
-        "original_size": size,          # Q2
+        "original_size": size,          # Q2: same size respawn
         "color":         (random.randint(50, 255),
                           random.randint(50, 255),
                           random.randint(50, 255)),
-       
+        "trail":         [],            # Q7: trail positions
+        "target_size":   size,          # Q9: animated growth
+        "size_at_start": size,          # Q9: animated growth
+        "grow_start_ms": 0,             # Q9: animated growth
+        "growing":       False,         # Q9: animated growth
     }
-
 
 
 # Exercise 1: create starting population
 def create_squares() -> list:
-
-    result = []
+    result: list = []
     for count, size in SQUARE_CONFIGS:
         for _ in range(count):
             result.append(make_square(size))
     return result
 
+
 # Exercise 2: same-size respawn
 def respawn(sq: dict) -> None:
-    size  = sq["original_size"]
-    speed = 200 * (1 - (size - MIN_SIZE) / (MAX_SIZE - MIN_SIZE + 1))
+    size: int = sq["original_size"]
+    speed: float = 200 * (1 - (size - MIN_SIZE) / (MAX_SIZE - MIN_SIZE + 1))
     speed = max(50, speed)
 
     sq["size"]          = size
@@ -72,31 +82,31 @@ def respawn(sq: dict) -> None:
     sq["y"]             = float(random.randint(0, max(0, HEIGHT - size)))
     sq["dx"]            = random.choice([-1, 1]) * speed
     sq["dy"]            = random.choice([-1, 1]) * speed
-    sq["trail"]         = [] 
-    
-    
-   # Exercise 4: collision detection
+    sq["trail"]         = []    # clear trail on respawn to avoid ghost lines
+
+
+# Exercise 4: collision detection
 def check_collision(a: dict, b: dict) -> bool:
-    
-    rect_a = pygame.Rect(a["x"], a["y"], a["size"], a["size"])
-    rect_b = pygame.Rect(b["x"], b["y"], b["size"], b["size"])
-    return rect_a.colliderect(rect_b) 
-    
-    # Exercise 6 helper: rescale velocity to match new size
+    rect_a: pygame.Rect = pygame.Rect(a["x"], a["y"], a["size"], a["size"])
+    rect_b: pygame.Rect = pygame.Rect(b["x"], b["y"], b["size"], b["size"])
+    return rect_a.colliderect(rect_b)
+
+
+# Exercise 6 helper: rescale velocity to match new size
 def _rescale_speed(sq: dict, new_size: int) -> None:
-    desired = 200 * (1 - (new_size - MIN_SIZE) / (MAX_SIZE - MIN_SIZE + 1))
+    desired: float = 200 * (1 - (new_size - MIN_SIZE) / (MAX_SIZE - MIN_SIZE + 1))
     desired = max(50, desired)
-    current = math.hypot(sq["dx"], sq["dy"])
+    current: float = math.hypot(sq["dx"], sq["dy"])
     if current > 0:
-        scale = desired / current
+        scale: float = desired / current
         sq["dx"] *= scale
         sq["dy"] *= scale
 
-    # Exercise 9: start animated growth
+
+# Exercise 9: start animated growth
 def start_grow(sq: dict, prey_size: int) -> None:
-    
-    growth   = max(1, prey_size // 4)
-    new_size = min(sq["size"] + growth, ABSOLUTE_MAX_SIZE)
+    growth: int   = max(1, prey_size // 4)
+    new_size: int = min(sq["size"] + growth, ABSOLUTE_MAX_SIZE)
     if new_size == sq["size"]:
         return  # already at cap, nothing to do
 
@@ -104,33 +114,32 @@ def start_grow(sq: dict, prey_size: int) -> None:
     sq["target_size"]    = new_size
     sq["grow_start_ms"]  = pygame.time.get_ticks()
     sq["growing"]        = True
-    
-    
+
+
 # Exercise 9: tick growth animation each frame
 def update_growth(sq: dict) -> None:
-    """Linearly interpolate size toward target_size over GROWTH_DURATION_MS."""
     if not sq["growing"]:
         return
-    elapsed = pygame.time.get_ticks() - sq["grow_start_ms"]
-    t = min(elapsed / GROWTH_DURATION_MS, 1.0)     # 0.0 → 1.0
-    sq["size"] = int(sq["size_at_start"] + t * (sq["target_size"] - sq["size_at_start"]))
+    elapsed: int = pygame.time.get_ticks() - sq["grow_start_ms"]
+    t: float     = min(elapsed / GROWTH_DURATION_MS, 1.0)   # 0.0 → 1.0
+    sq["size"]   = int(sq["size_at_start"] + t * (sq["target_size"] - sq["size_at_start"]))
     if t >= 1.0:
         sq["size"]    = sq["target_size"]
         sq["growing"] = False
-        _rescale_speed(sq, sq["size"])   # Q6: update speed for new size
+        _rescale_speed(sq, sq["size"])  # update speed for new size
 
 
-    # Exercise 5 + 6: eating
+# Exercise 5 + 6: eating
 def handle_eating(squares: list) -> None:
-    
-    eaten = set()
+    eaten: set = set()
     for i in range(len(squares)):
         if i in eaten:
             continue
         for j in range(i + 1, len(squares)):
             if j in eaten:
                 continue
-            a, b = squares[i], squares[j]
+            a: dict = squares[i]
+            b: dict = squares[j]
             if check_collision(a, b):
                 if a["size"] > b["size"]:
                     start_grow(a, b["size"])
@@ -144,38 +153,32 @@ def handle_eating(squares: list) -> None:
         respawn(squares[idx])
 
 
-
+# Original flee behaviour
 def apply_flee(squares: list) -> None:
     for sq in squares:
         for other in squares:
             if sq is other:
                 continue
             if sq["size"] < other["size"]:
-                fx   = sq["x"] - other["x"]
-                fy   = sq["y"] - other["y"]
-                dist = (fx ** 2 + fy ** 2) ** 0.5
+                fx: float   = sq["x"] - other["x"]
+                fy: float   = sq["y"] - other["y"]
+                dist: float = (fx ** 2 + fy ** 2) ** 0.5
                 if dist < 150 and dist > 0:
                     fx /= dist
                     fy /= dist
-                    flee_strength = 300
+                    flee_strength: float = 300
                     sq["dx"] += fx * flee_strength * 0.05
                     sq["dy"] += fy * flee_strength * 0.05
-                    speed = (sq["dx"] ** 2 + sq["dy"] ** 2) ** 0.5
-                    max_speed = 300
+                    speed: float     = (sq["dx"] ** 2 + sq["dy"] ** 2) ** 0.5
+                    max_speed: float = 300
                     if speed > max_speed:
                         sq["dx"] = sq["dx"] / speed * max_speed
                         sq["dy"] = sq["dy"] / speed * max_speed
 
-    
-    
-    
-    
-    
-    
-    
-    # Exercise 3: screen wrapping
+
+# Exercise 3: screen wrapping
 def wrap_screen(sq: dict) -> None:
-    size = sq["size"]
+    size: int = sq["size"]
     if sq["x"] + size < 0:
         sq["x"] = float(WIDTH)
     elif sq["x"] > WIDTH:
@@ -188,50 +191,53 @@ def wrap_screen(sq: dict) -> None:
 
 # Exercise 7: draw trail
 def draw_trail(surface: pygame.Surface, sq: dict) -> None:
-    trail = sq["trail"]
+    
+    trail: list = sq["trail"]
     if len(trail) < 2:
         return
 
     r, g, b = sq["color"]
-    n = len(trail)
+    n: int = len(trail)
 
     for i in range(1, n):
         p1 = trail[i - 1]
         p2 = trail[i]
 
-        # Skip wrap-boundary segments (the fix)
+        # Skip wrap-boundary segments (the artifact fix)
         if abs(p2[0] - p1[0]) > WIDTH  / 2:
             continue
         if abs(p2[1] - p1[1]) > HEIGHT / 2:
             continue
 
         # Older segments are dimmer
-        alpha = i / n
+        alpha: float = i / n
         color = (int(r * alpha), int(g * alpha), int(b * alpha))
         pygame.draw.line(surface, color,
                          (int(p1[0]), int(p1[1])),
                          (int(p2[0]), int(p2[1])), 2)
 
 
+# Exercise 8: speed test
 def run_speed_test() -> None:
-    size = 20
-    sq   = make_square(size)
-    sq["x"] = float(WIDTH  // 2)
-    sq["y"] = float(HEIGHT // 2)
+    
+    size: int = 20
+    sq: dict  = make_square(size)
+    sq["x"]   = float(WIDTH  // 2)
+    sq["y"]   = float(HEIGHT // 2)
 
-    expected = 200 * (1 - (size - MIN_SIZE) / (MAX_SIZE - MIN_SIZE + 1))
+    expected: float = 200 * (1 - (size - MIN_SIZE) / (MAX_SIZE - MIN_SIZE + 1))
     expected = max(50.0, expected)
 
-    angle    = math.pi / 4
+    angle: float = math.pi / 4
     sq["dx"] = expected * math.cos(angle)
     sq["dy"] = expected * math.sin(angle)
 
-    dt = 1.0 / FPS
-    x0, y0 = sq["x"], sq["y"]
-    sq["x"] += sq["dx"] * dt
-    sq["y"] += sq["dy"] * dt
+    dt: float    = 1.0 / FPS
+    x0, y0       = sq["x"], sq["y"]
+    sq["x"]     += sq["dx"] * dt
+    sq["y"]     += sq["dy"] * dt
 
-    measured = math.hypot(sq["x"] - x0, sq["y"] - y0) / dt
+    measured: float = math.hypot(sq["x"] - x0, sq["y"] - y0) / dt
 
     assert abs(measured - expected) < 0.01, (
         f"Speed test FAILED: expected {expected:.4f} px/s, got {measured:.4f} px/s"
@@ -239,17 +245,16 @@ def run_speed_test() -> None:
     print(f"[SpeedTest] PASSED — {measured:.4f} ≈ {expected:.4f} px/s")
 
 
-
-# Startup
-if TEST_MODE_ON:            # Exercise 8: headless speed test
+# Startup 
+if TEST_MODE_ON:           # Exercise 8: run headless speed test
     run_speed_test()
 
-squares = create_squares()  # Exercise 1: mix of squares
+squares: list = create_squares()   # Exercise 1: mix of squares
 
 
-# Main loop
+# Main loop 
 while True:
-    delta_time = clock.tick(FPS) / 1000.0
+    delta_time: float = clock.tick(FPS) / 1000.0
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -258,13 +263,13 @@ while True:
 
     screen.fill((15, 15, 30))
 
-    # Flee (your original logic, untouched)
+    # Original flee behaviour
     apply_flee(squares)
 
     for sq in squares:
         # Exercise 7: record center position in trail before moving
-        cx = sq["x"] + sq["size"] / 2
-        cy = sq["y"] + sq["size"] / 2
+        cx: float = sq["x"] + sq["size"] / 2
+        cy: float = sq["y"] + sq["size"] / 2
         sq["trail"].append((cx, cy))
         if len(sq["trail"]) > TRAILS_LENGTH:
             sq["trail"].pop(0)
@@ -284,11 +289,11 @@ while True:
 
     # Draw trails then squares
     for sq in squares:
-        draw_trail(screen, sq)                                          # Q7
+        draw_trail(screen, sq)                                        # Q7
         pygame.draw.rect(screen, sq["color"],
-                         (sq["x"], sq["y"], sq["size"], sq["size"]))   # original
+                         (sq["x"], sq["y"], sq["size"], sq["size"])) # original
 
-    fps_text = font.render(
+    fps_text: pygame.Surface = font.render(
         f"FPS: {clock.get_fps():.1f}  Squares: {len(squares)}", True, (255, 255, 255)
     )
     screen.blit(fps_text, (10, 10))
