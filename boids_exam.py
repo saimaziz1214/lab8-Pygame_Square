@@ -58,15 +58,15 @@ class Boid:
     # TODO: Implement Screen Wrapping
     # Screen wrapping: if a boid goes off one edge of the screen, 
     # it should reappear on the opposite edge
-def _screen_wrap(self) -> None:
+    def _screen_wrap(self) -> None:
         # If boid exits one edge, reappear on the opposite edge
-    if self.x < 0:
+     if self.x < 0:
         self.x = float(config.WIDTH)
-    elif self.x > config.WIDTH:
+     elif self.x > config.WIDTH:
         self.x = 0.0
-    if self.y < 0:
+     if self.y < 0:
         self.y = float(config.HEIGHT)
-    elif self.y > config.HEIGHT:
+     elif self.y > config.HEIGHT:
         self.y = 0.0
         
     
