@@ -102,8 +102,26 @@ class Boid:
     # inversely proportional to the distance. 
     # Then sum these vectors to get the overall separation steering force.
     def _separation(self, boids: List['Boid']) -> pygame.Vector2:
-        steer : pygame.Vector2 = pygame.Vector2(0, 0)
-        return steer
+     steer: pygame.Vector2 = pygame.Vector2(0, 0)
+     count: int = 0
+
+     for other in boids:
+        if other is self:
+            continue
+        dx: float = self.x - other.x
+        dy: float = self.y - other.y
+        dist: float = math.hypot(dx, dy)
+        # Only consider boids within SEPARATION_DISTANCE
+        if 0 < dist < config.SEPARATION_DISTANCE:
+            # Closer boids push harder: weight inversely by distance squared
+            steer += pygame.Vector2(dx, dy) / (dist * dist)
+            count += 1
+
+    # Normalise: only direction matters, strength applied in update()
+     if count > 0 and steer.length() > 0:
+        steer = steer.normalize()
+
+     return steer
 
     # Alignment: steer toward the average direction of nearby boids: 
     # _alignment returns a vector pointing in the average direction of nearby boids
