@@ -68,7 +68,6 @@ def create_squares() -> list:
             result.append(make_square(size))
     return result
 
-
 # Exercise 2: same-size respawn
 def respawn(sq: dict) -> None:
     size: int = sq["original_size"]
